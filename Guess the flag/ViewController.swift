@@ -18,6 +18,7 @@ class ViewController: UIViewController {
     var countries = [String]()
     var score = 0
     var correctAnswer = 0
+    var askedQuestions = 0
     
     // MARK: - Actions
     @IBAction func buttonTapped(_ sender: UIButton) {
@@ -31,9 +32,15 @@ class ViewController: UIViewController {
             score -= 1
         }
         
-        let ac = UIAlertController(title: title, message: "Your score is \(score).", preferredStyle: .alert)
-        ac.addAction(UIAlertAction(title: "Continue", style: .default, handler: askQuestion))
-        present(ac, animated: true)
+        if askedQuestions < 10 {
+            let alertController = UIAlertController(title: title, message: "Your score is \(score).", preferredStyle: .alert)
+            alertController.addAction(UIAlertAction(title: "Continue", style: .default, handler: askQuestion))
+            present(alertController, animated: true)
+        } else {
+            let finalAlertController = UIAlertController(title: "Game over!", message: "Your score is \(score).", preferredStyle: .alert)
+            finalAlertController.addAction(UIAlertAction(title: "Start new game!", style: .default, handler: startNewGame))
+            present(finalAlertController, animated: true)
+        }
     }
     
     // MARK: - Navigation
@@ -64,7 +71,16 @@ class ViewController: UIViewController {
         button3.setImage(UIImage(named: countries[2]), for: .normal)
         
         let uppercasedCountry = countries[correctAnswer].uppercased()
-        title = "Tap on \(uppercasedCountry)'s flag. Your current score is: \(score)."
+        title = "Score: \(score) — Tap on: \(uppercasedCountry)'s flag."
+        askedQuestions += 1
+    }
+    
+    // Start a new game
+    func startNewGame(action: UIAlertAction) {
+        score = 0
+        askedQuestions = 0
+        
+        askQuestion()
     }
     
     
