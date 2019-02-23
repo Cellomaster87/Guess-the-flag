@@ -46,6 +46,7 @@ class ViewController: UIViewController {
     // MARK: - Navigation
     override func viewDidLoad() {
         super.viewDidLoad()
+        navigationItem.leftBarButtonItem = UIBarButtonItem(title: "Score", style: .plain, target: self, action: #selector(showScore))
         
         countries += ["estonia", "france", "germany", "ireland", "italy", "monaco", "nigeria", "poland", "russia", "spain", "uk", "us"]
         
@@ -71,7 +72,8 @@ class ViewController: UIViewController {
         button3.setImage(UIImage(named: countries[2]), for: .normal)
         
         let uppercasedCountry = countries[correctAnswer].uppercased()
-        title = "Score: \(score) — Tap on: \(uppercasedCountry)'s flag."
+        // title = "Score: \(score) — Tap on: \(uppercasedCountry)'s flag." /* commented out to complete Project 3's challenge"
+        title = uppercasedCountry
         askedQuestions += 1
     }
     
@@ -83,6 +85,12 @@ class ViewController: UIViewController {
         askQuestion()
     }
     
-    
+    // Show the score on tapping the Bar Button Item
+    @objc func showScore() {
+        let scoreAlert = UIAlertController(title: "SCORE", message: nil, preferredStyle: .actionSheet)
+        scoreAlert.addAction(UIAlertAction(title: "Your current score is \(score)!", style: .default, handler: nil))
+        
+        present(scoreAlert, animated: true)
+    }
 }
 
