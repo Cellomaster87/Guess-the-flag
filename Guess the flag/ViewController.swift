@@ -51,33 +51,15 @@ class ViewController: UIViewController {
     
     // MARK: - Actions
     @IBAction func buttonTapped(_ sender: UIButton) {
-        var title: String
-        
-        if sender.tag == correctAnswer {
-            title = "Correct"
-            score += 1
-        } else {
-            title = "Wrong! That's the flag of \(countries[sender.tag].uppercased())"
-            score -= 1
-        }
-        
-        if askedQuestions < 10 {
-            let alertController = UIAlertController(title: title, message: "Your score is \(score).", preferredStyle: .alert)
-            alertController.addAction(UIAlertAction(title: "Continue", style: .default, handler: askQuestion))
-            present(alertController, animated: true)
-        } else {
-            if score > highScore {
-                highScore = score
-                save()
-                let highScoreAC = UIAlertController(title: "Game over! New High Score", message: "Your score is \(score).", preferredStyle: .alert)
-                highScoreAC.addAction(UIAlertAction(title: "Start new game!", style: .default, handler: startNewGame))
-                present(highScoreAC, animated: true)
-            } else {
-                let finalAlertController = UIAlertController(title: "Game over!", message: "Your score is \(score).", preferredStyle: .alert)
-                finalAlertController.addAction(UIAlertAction(title: "Start new game!", style: .default, handler: startNewGame))
-                present(finalAlertController, animated: true)
-            }
-        }
+        UIView.animate(withDuration: 0.4, delay: 0, usingSpringWithDamping: 0.5, initialSpringVelocity: 5, options: [], animations: {
+            sender.transform = CGAffineTransform(scaleX: 0.85, y: 0.85)
+        }, completion: { _ in
+            UIView.animate(withDuration: 0.6, delay: 0, usingSpringWithDamping: 0.5, initialSpringVelocity: 5, options: [], animations: {
+                sender.transform = CGAffineTransform(scaleX: 1, y: 1)
+            }, completion: { _ in
+                self.checkAnswer(answer: sender.tag)
+            })
+        })
     }
     
     // MARK: - Methods
@@ -115,12 +97,38 @@ class ViewController: UIViewController {
     // Save the high score
     func save() {
         let defaults = UserDefaults.standard
+        defaults.set(highScore, forKey: "highScore")
+        print("Successfully saved score!")
+    }
+    
+    // Manage the different alert controllers
+    func checkAnswer(answer: Int) {
+        var title: String
         
-        do {
-            defaults.set(highScore, forKey: "highScore")
-            print("Successfully saved score!")
-        } catch {
-            print("Failed to save high score")
+        if answer == correctAnswer {
+            title = "Correct"
+            score += 1
+        } else {
+            title = "Wrong! That's the flag of \(countries[answer].uppercased())"
+            score -= 1
+        }
+        
+        if askedQuestions < 10 {
+            let alertController = UIAlertController(title: title, message: "Your score is \(score).", preferredStyle: .alert)
+            alertController.addAction(UIAlertAction(title: "Continue", style: .default, handler: askQuestion))
+            present(alertController, animated: true)
+        } else {
+            if score > highScore {
+                highScore = score
+                save()
+                let highScoreAC = UIAlertController(title: "Game over! New High Score", message: "Your score is \(score).", preferredStyle: .alert)
+                highScoreAC.addAction(UIAlertAction(title: "Start new game!", style: .default, handler: startNewGame))
+                present(highScoreAC, animated: true)
+            } else {
+                let finalAlertController = UIAlertController(title: "Game over!", message: "Your score is \(score).", preferredStyle: .alert)
+                finalAlertController.addAction(UIAlertAction(title: "Start new game!", style: .default, handler: startNewGame))
+                present(finalAlertController, animated: true)
+            }
         }
     }
 }
