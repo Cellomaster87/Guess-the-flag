@@ -6,9 +6,10 @@
 //  Copyright © 2019 Michele Galvagno. All rights reserved.
 //
 
+import UserNotifications
 import UIKit
 
-class ViewController: UIViewController {
+class ViewController: UIViewController, UNUserNotificationCenterDelegate {
     // MARK: - Outlets
     @IBOutlet var button1: UIButton!
     @IBOutlet var button2: UIButton!
@@ -25,6 +26,9 @@ class ViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         navigationItem.leftBarButtonItem = UIBarButtonItem(title: "Score", style: .plain, target: self, action: #selector(showScore))
+        
+        registerLocal()
+        scheduleWeek()
         
         countries += ["estonia", "france", "germany", "ireland", "italy", "monaco", "nigeria", "poland", "russia", "spain", "uk", "us"]
         
@@ -128,6 +132,125 @@ class ViewController: UIViewController {
                 let finalAlertController = UIAlertController(title: "Game over!", message: "Your score is \(score).", preferredStyle: .alert)
                 finalAlertController.addAction(UIAlertAction(title: "Start new game!", style: .default, handler: startNewGame))
                 present(finalAlertController, animated: true)
+            }
+        }
+    }
+    
+    // MARK: - Notifications
+    // Request user permissions
+    func registerLocal() {
+        let center = UNUserNotificationCenter.current()
+        center.requestAuthorization(options: [.alert, .badge, .sound]) { (granted, error) in
+            if granted {
+                print("Urrah!")
+            } else {
+                print("D'oh!")
+            }
+        }
+    }
+    
+    func scheduleWeek() {
+        for weekday in 1 ... 7 {
+            schedule(for: weekday)
+        }
+    }
+    
+    func schedule(for weekday: Int) {
+        registerCategories()
+        
+        let center = UNUserNotificationCenter.current()
+        let content = createContent()
+        let dateComponents = setDate(at: 9, and: 30, on: weekday)
+        let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: true)
+        let request = UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: trigger)
+        
+        center.add(request)
+    }
+    
+    func createContent() -> UNMutableNotificationContent {
+        let content = UNMutableNotificationContent()
+        content.title = "It's flag time!"
+        content.body = "Your favourite flags collection is missing you!"
+        content.categoryIdentifier = "alarm"
+        content.userInfo = ["customData": "It's game time!"]
+        content.sound = .default
+        
+        return content
+    }
+    
+    func setDate(at hour: Int?, and minutes: Int?, on weekday: Int?) -> DateComponents {
+        var dateComponents = DateComponents()
+        dateComponents.hour = hour
+        dateComponents.minute = minutes
+        dateComponents.weekday = weekday
+        
+        return dateComponents
+    }
+    
+    func registerCategories() {
+        let center = UNUserNotificationCenter.current()
+        center.delegate = self
+        
+        let show = UNNotificationAction(identifier: "show", title: "Let's play!", options: .foreground)
+        let remind = UNNotificationAction(identifier: "remind", title: "Remind me later...", options: .foreground)
+        let category = UNNotificationCategory(identifier: "alarm", actions: [show, remind], intentIdentifiers: [], options: [])
+        
+        center.setNotificationCategories([category])
+    }
+    
+    func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
+        let userInfo = response.notification.request.content.userInfo
+        
+        if let customData = userInfo["customData"] as? String {
+            print("Custom data received: \(customData)")
+            
+            switch response.actionIdentifier {
+            case UNNotificationDefaultActionIdentifier:
+                center.removeAllPendingNotificationRequests()
+            case "show":
+                center.removeAllPendingNotificationRequests()
+                let tapAC = UIAlertController(title: "Welcome back!", message: "Your flags have missed you! Ready to play?", preferredStyle: .alert)
+                tapAC.addAction(UIAlertAction(title: "Yes, let's play!", style: .default))
+                
+                present(tapAC, animated: true)
+            case "remind":
+                response.notification.snoozeNotification(for: 0, minutes: 10, seconds: 0)
+            default:
+                break
+            }
+        }
+    }
+}
+
+// Credit to Simon Ljungberg
+extension UNNotification {
+    func snoozeNotification(for hours: Int, minutes: Int, seconds: Int) {
+        let center = UNUserNotificationCenter.current()
+        let content = UNMutableNotificationContent()
+        
+        content.title = "It's flag time!"
+        content.body = "We are waiting for you!"
+        content.userInfo = ["customData": "It's game time!"]
+        content.sound = .default
+        
+        let identifier = self.request.identifier
+        guard let oldTrigger = self.request.trigger as? UNCalendarNotificationTrigger else {
+            debugPrint("Cannot reschedule notification without calendar trigger.")
+            
+            return
+        }
+        
+        var components = oldTrigger.dateComponents
+        components.hour = (components.hour ?? 0) + hours
+        components.minute = (components.minute ?? 0) + minutes
+        
+        let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: false)
+        let request = UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)
+        center.add(request) { (error) in
+            if let error = error {
+                debugPrint("Rescheduling failed", error.localizedDescription)
+            } else {
+                debugPrint("Rescheduling succeeded")
             }
         }
     }
