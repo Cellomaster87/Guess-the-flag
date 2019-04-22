@@ -192,7 +192,7 @@ class ViewController: UIViewController, UNUserNotificationCenterDelegate {
         center.delegate = self
         
         let show = UNNotificationAction(identifier: "show", title: "Let's play!", options: .foreground)
-        let remind = UNNotificationAction(identifier: "remind", title: "Remind me later...", options: .foreground)
+        let remind = UNNotificationAction(identifier: "remind", title: "Remind me later...", options: [])
         let category = UNNotificationCategory(identifier: "alarm", actions: [show, remind], intentIdentifiers: [], options: [])
         
         center.setNotificationCategories([category])
@@ -243,6 +243,7 @@ extension UNNotification {
         var components = oldTrigger.dateComponents
         components.hour = (components.hour ?? 0) + hours
         components.minute = (components.minute ?? 0) + minutes
+        components.weekday = (components.weekday ?? 0)
         
         let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: false)
         let request = UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)
